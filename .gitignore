@@ -1,4 +1,5 @@
-./finetune_dyncon
-./finetune_dyndis
-./finetune_static
-./finetune_mixed
+finetune_dyncon
+finetune_dyndis
+finetune_static
+finetune_mixed
+*__pycache__*
