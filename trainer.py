@@ -30,8 +30,8 @@ class Trainer:
         self.logfile = open(args.out_dir + '/log.txt', 'w')
 
         # Initial Test
-        self.model.eval()
-        self.test_loader.Test(self.model, self.result_dir, self.current_epoch, self.logfile, str(self.current_epoch).zfill(3) + '.png')
+        # self.model.eval()
+        # self.test_loader.Test(self.model, self.result_dir, self.current_epoch, self.logfile, str(self.current_epoch).zfill(3) + '.png')
 
     def train(self):
         # Train
@@ -57,7 +57,7 @@ class Trainer:
         # Test
         torch.save({'epoch': self.current_epoch, 'state_dict': self.model.get_state_dict()}, self.ckpt_dir + '/model_epoch' + str(self.current_epoch).zfill(3) + '.pth')
         self.model.eval()
-        self.test_loader.Test(self.model, self.result_dir, self.current_epoch, self.logfile, str(self.current_epoch).zfill(3) + '.png')
+        self.test_loader.Test(self.model, self.current_epoch)
         self.logfile.write('\n')
 
     def terminate(self):

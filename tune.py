@@ -1,4 +1,4 @@
-from datareader import DBreader_Vimeo90k
+from datareader import DBreader_BVItexture, DBreader_DynTex, DBreader_SynTex, Sampler
 from torch.utils.data import DataLoader
 import argparse
 from torchvision import transforms
@@ -20,6 +20,7 @@ parser.add_argument('--gpu_id', type=int, default=0)
 
 # Directory Setting
 parser.add_argument('--train', type=str, default='./db/vimeo_triplet')
+parser.add_argument('--texture', type=str, default='mixed')
 parser.add_argument('--out_dir', type=str, default='./output_adacof_train')
 parser.add_argument('--load', type=str, default=None)
 parser.add_argument('--test_input', type=str, default='./test_input/middlebury_others/input')
@@ -50,17 +51,23 @@ def main():
     args = parser.parse_args()
     torch.cuda.set_device(args.gpu_id)
 
-    dataset = DBreader_Vimeo90k(args.train, random_crop=(args.patch_size, args.patch_size))
-    TestDB = Middlebury_other(args.test_input, args.gt)
-    train_loader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    dyntex_dir = ''
+    syntex_dir = ''
+    bvitexture_dir = ''
+    homtex_dir = ''
+    dataset_dyntex = DBreader_DynTex(dyntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
+    dataset_syntex = DBreader_DynTex(syntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
+    dataset_bvitexture = DBreader_DynTex(bvitexture_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
+    sampler = Sampler([dataset_dyntex, dataset_syntex, dataset_bvitexture])
+    TestDB = HomTex(homtex_dir, texture='mixed')
+
+    train_loader = DataLoader(dataset=sampler, batch_size=args.batch_size, shuffle=True)
     model = models.Model(args)
     loss = losses.Loss(args)
 
     start_epoch = 0
-    if args.load is not None:
-        checkpoint = torch.load(args.load)
-        model.load(checkpoint['state_dict'])
-        start_epoch = checkpoint['epoch']
+    checkpoint = torch.load('checkpoint/kernelsize_5/ckpt.pth')
+    model.load(checkpoint['state_dict'])
 
     my_trainer = Trainer(args, train_loader, TestDB, model, loss, start_epoch)
 
