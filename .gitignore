@@ -1,3 +1,4 @@
 ./finetune_dyncon
 ./finetune_dyndis
 ./finetune_static
+./finetune_mixed

@@ -222,6 +222,7 @@ class HomTex:
                 torch.cuda.empty_cache()
             # add the last frame (index: 249)
             oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, n_frames-1, 8), cv2.COLOR_RGB2BGR))
+            stream.close()
 
             # build interpolated video (mp4)
             out_mp4 = cv2.VideoWriter('tmp.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (256,256))
@@ -234,7 +235,7 @@ class HomTex:
 
             # compute vmaf
             os.chdir(vmaf_dir)
-            cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} /content/AdaCoF-pytorch/tmp.yuv --out-fmt text'.format(yuv_path)
+            cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} {}/tmp.yuv --out-fmt text'.format(yuv_path, adacof_dir)
             result = subprocess.check_output(cmd, shell=True)
             os.chdir(adacof_dir)
             os.system('rm tmp.yuv tmp.mp4')
@@ -247,12 +248,12 @@ class HomTex:
             ssim_dict[seq_name] = sum(oup_ssim)/len(oup_ssim)
             vmaf_dict[seq_name] = oup_vmaf
 
-            with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-                pickle.dump(psnr_dict, f)
-            with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-                pickle.dump(ssim_dict, f)
-            with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-                pickle.dump(vmaf_dict, f)
+        with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+            pickle.dump(psnr_dict, f)
+        with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+            pickle.dump(ssim_dict, f)
+        with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+            pickle.dump(vmaf_dict, f)
     
     def _get_seq_list(self, db_dir, texture):
         # read annotations
