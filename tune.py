@@ -56,8 +56,8 @@ def main():
     bvitexture_dir = '/mnt/storage/home/mt20523/scratch/BVI-Texture'
     homtex_dir = '/mnt/storage/home/mt20523/scratch/HomTex'
     dataset_dyntex = DBreader_DynTex(dyntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
-    dataset_syntex = DBreader_DynTex(syntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
-    dataset_bvitexture = DBreader_DynTex(bvitexture_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
+    dataset_syntex = DBreader_SynTex(syntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
+    dataset_bvitexture = DBreader_BVItexture(bvitexture_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
     sampler = Sampler([dataset_dyntex, dataset_syntex, dataset_bvitexture])
     TestDB = HomTex(homtex_dir, texture='mixed')
 
