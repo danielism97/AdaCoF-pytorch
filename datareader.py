@@ -696,10 +696,10 @@ class Sampler(Dataset):
         # first randomly sample a dataset
         if index < self.len_datasets[0]:
             return self.datasets[0].__getitem__(index)
-        elif index < np.sum(self.len_datasets[:1]):
+        elif index < np.sum(self.len_datasets[:2]):
             return self.datasets[1].__getitem__(index-self.len_datasets[0])
         else:
-            return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:1])))
+            return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:2])))
         
 
     def __len__(self):
