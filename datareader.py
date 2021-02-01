@@ -134,9 +134,9 @@ class DBreader_BVItexture(Dataset):
         num_frames = file_size // (self.width*self.height*3 // 2)
         frame_idx = random.randint(1, num_frames-2)
 
-        rawFrame0 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx-1, 8)
-        rawFrame1 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx, 8)
-        rawFrame2 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx+1, 8)
+        rawFrame0 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx-1, 8))
+        rawFrame1 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx, 8))
+        rawFrame2 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx+1, 8))
         stream.close()
 
         if self.random_crop is not None:
@@ -213,9 +213,9 @@ class DBreader_SynTex(Dataset):
         num_frames = file_size // (self.width*self.height*3 // 2)
         frame_idx = random.randint(1, num_frames-2)
 
-        rawFrame0 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx-1, 8)
-        rawFrame1 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx, 8)
-        rawFrame2 = read_frame_yuv2rgb(stream, self.width, self.height, frame_idx+1, 8)
+        rawFrame0 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx-1, 8))
+        rawFrame1 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx, 8))
+        rawFrame2 = Image.fromarray(read_frame_yuv2rgb(stream, self.width, self.height, frame_idx+1, 8))
         stream.close()
 
         if self.random_crop is not None:
@@ -294,10 +294,13 @@ class DBreader_DynTex(Dataset):
         # read 3 frames
         cap.set(1,frame_idx-1)
         _, rawFrame0 = cap.read()
+        rawFrame0 = Image.fromarray(cv2.cvtColor(rawFrame0, cv2.COLOR_BGR2RGB))
         cap.set(1,frame_idx)
         _, rawFrame1 = cap.read()
+        rawFrame1 = Image.fromarray(cv2.cvtColor(rawFrame1, cv2.COLOR_BGR2RGB))
         cap.set(1,frame_idx+1)
         _, rawFrame2 = cap.read()
+        rawFrame2 = Image.fromarray(cv2.cvtColor(rawFrame2, cv2.COLOR_BGR2RGB))
 
 
         if self.random_crop is not None:
