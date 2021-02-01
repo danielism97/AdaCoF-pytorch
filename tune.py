@@ -28,12 +28,12 @@ parser.add_argument('--gt', type=str, default='./test_input/middlebury_others/gt
 
 # Learning Options
 parser.add_argument('--epochs', type=int, default=50, help='Max Epochs')
-parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
+parser.add_argument('--batch_size', type=int, default=8, help='Batch size')
 parser.add_argument('--loss', type=str, default='1*Charb+0.01*g_Spatial+0.005*g_Occlusion', help='loss function configuration')
 parser.add_argument('--patch_size', type=int, default=256, help='Patch size')
 
 # Optimization specifications
-parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
+parser.add_argument('--lr', type=float, default=0.00001, help='learning rate')
 parser.add_argument('--lr_decay', type=int, default=20, help='learning rate decay per N epochs')
 parser.add_argument('--decay_type', type=str, default='step', help='learning rate decay type')
 parser.add_argument('--gamma', type=float, default=0.5, help='learning rate decay factor for step decay')

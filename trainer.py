@@ -17,6 +17,7 @@ class Trainer:
         self.optimizer = utility.make_optimizer(args, self.model)
         self.scheduler = utility.make_scheduler(args, self.optimizer)
 
+        args.out_dir = args.out_dir + '/finetune_{}'.format(args.texture)
         if not os.path.exists(args.out_dir):
             os.makedirs(args.out_dir)
         self.result_dir = args.out_dir + '/result'
@@ -57,7 +58,7 @@ class Trainer:
         # Test
         torch.save({'epoch': self.current_epoch, 'state_dict': self.model.get_state_dict()}, self.ckpt_dir + '/model_epoch' + str(self.current_epoch).zfill(3) + '.pth')
         self.model.eval()
-        self.test_loader.Test(self.model, self.current_epoch)
+        self.test_loader.Test(self.model, self.current_epoch, self.result_dir)
         self.logfile.write('\n')
 
     def terminate(self):

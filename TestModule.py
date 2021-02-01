@@ -169,7 +169,7 @@ class HomTex:
         self.bvi_texture_seqs = ['PaintingTilting', 'PaperStatic', 'BallUnderWater', 'BricksBushesStatic', 
                                  'PlasmaFree', 'CalmingWater', 'LampLeaves', 'SmokeClear']
 
-    def Test(self, model, epoch):
+    def Test(self, model, epoch, output_dir):
         vmaf_dir = '/mnt/storage/home/mt20523/vmaf'
         adacof_dir = '/mnt/storage/home/mt20523/AdaCoF-pytorch'
         model.eval()
@@ -247,11 +247,11 @@ class HomTex:
             ssim_dict[seq_name] = sum(oup_ssim)/len(oup_ssim)
             vmaf_dict[seq_name] = oup_vmaf
 
-            with open('adacof_psnr_epoch{}.pkl'.format(epoch), 'wb+') as f:
+            with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
                 pickle.dump(psnr_dict, f)
-            with open('adacof_ssim_epoch{}.pkl'.format(epoch), 'wb+') as f:
+            with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
                 pickle.dump(ssim_dict, f)
-            with open('adacof_vmaf_epoch{}.pkl'.format(epoch), 'wb+') as f:
+            with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
                 pickle.dump(vmaf_dict, f)
     
     def _get_seq_list(self, db_dir, texture):
