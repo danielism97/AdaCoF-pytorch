@@ -170,8 +170,8 @@ class HomTex:
                                  'PlasmaFree', 'CalmingWater', 'LampLeaves', 'SmokeClear']
 
     def Test(self, model, epoch):
-        vmaf_dir = ''
-        adacof_dir = ''
+        vmaf_dir = '/mnt/storage/home/mt20523/vmaf'
+        adacof_dir = '/mnt/storage/home/mt20523/AdaCoF-pytorch'
         model.eval()
 
         totensor = transforms.ToTensor()

@@ -51,10 +51,10 @@ def main():
     args = parser.parse_args()
     torch.cuda.set_device(args.gpu_id)
 
-    dyntex_dir = ''
-    syntex_dir = ''
-    bvitexture_dir = ''
-    homtex_dir = ''
+    dyntex_dir = '/mnt/storage/home/mt20523/scratch/DynTex'
+    syntex_dir = '/mnt/storage/home/mt20523/scratch/SynTex'
+    bvitexture_dir = '/mnt/storage/home/mt20523/scratch/BVI-Texture'
+    homtex_dir = '/mnt/storage/home/mt20523/scratch/HomTex'
     dataset_dyntex = DBreader_DynTex(dyntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
     dataset_syntex = DBreader_DynTex(syntex_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
     dataset_bvitexture = DBreader_DynTex(bvitexture_dir, args.texture, random_crop=(args.patch_size, args.patch_size))
