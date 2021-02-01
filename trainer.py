@@ -49,7 +49,7 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            if batch_idx % 100 == 0:
+            if batch_idx % 10 == 0:
                 print('{:<13s}{:<14s}{:<6s}{:<16s}{:<12s}{:<20.16f}'.format('Train Epoch: ', '[' + str(self.current_epoch) + '/' + str(self.args.epochs) + ']', 'Step: ', '[' + str(batch_idx) + '/' + str(self.max_step) + ']', 'train loss: ', loss.item()))
         self.current_epoch += 1
         self.scheduler.step()
