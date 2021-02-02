@@ -197,9 +197,9 @@ class HomTex:
             file_size = os.path.getsize(yuv_path)
             n_frames = file_size // (self.width*self.height*3 // 2)
 
-            oup_frames = []
+            # oup_frames = []
             # add the first frame
-            oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, 0, 8), cv2.COLOR_RGB2BGR))
+            # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, 0, 8), cv2.COLOR_RGB2BGR))
             for t in range(0, n_frames-2, 2):
                 with torch.no_grad():
                 # read 3 frames (rgb)
@@ -214,46 +214,46 @@ class HomTex:
                 # Calculate average SSIM
                 oup_ssim.extend(to_ssim(oup, img2, size_average=False).cpu().numpy())
 
-                oup_rgb = np.moveaxis(oup[0].cpu().clamp(0.0, 1.0).numpy()*255.0, 0, -1).astype(np.uint8)
+                # oup_rgb = np.moveaxis(oup[0].cpu().clamp(0.0, 1.0).numpy()*255.0, 0, -1).astype(np.uint8)
 
-                oup_frames.append(cv2.cvtColor(oup_rgb, cv2.COLOR_RGB2BGR)) #256x256x3
-                oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8), cv2.COLOR_RGB2BGR))
+                # oup_frames.append(cv2.cvtColor(oup_rgb, cv2.COLOR_RGB2BGR)) #256x256x3
+                # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8), cv2.COLOR_RGB2BGR))
 
                 torch.cuda.empty_cache()
             # add the last frame (index: 249)
-            oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, n_frames-1, 8), cv2.COLOR_RGB2BGR))
+            # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, n_frames-1, 8), cv2.COLOR_RGB2BGR))
             stream.close()
 
-            # build interpolated video (mp4)
-            out_mp4 = cv2.VideoWriter('tmp.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (256,256))
-            for i in range(len(oup_frames)):
-                out_mp4.write(oup_frames[i])
-            out_mp4.release()
+            # # build interpolated video (mp4)
+            # out_mp4 = cv2.VideoWriter('tmp.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (256,256))
+            # for i in range(len(oup_frames)):
+            #     out_mp4.write(oup_frames[i])
+            # out_mp4.release()
 
-            # convert mp4 to yuv
-            os.system('ffmpeg -i tmp.mp4 tmp.yuv')
+            # # convert mp4 to yuv
+            # os.system('ffmpeg -i tmp.mp4 tmp.yuv')
 
-            # compute vmaf
-            os.chdir(vmaf_dir)
-            cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} {}/tmp.yuv --out-fmt text'.format(yuv_path, adacof_dir)
-            result = subprocess.check_output(cmd, shell=True)
-            os.chdir(adacof_dir)
-            os.system('rm tmp.yuv tmp.mp4')
+            # # compute vmaf
+            # os.chdir(vmaf_dir)
+            # cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} {}/tmp.yuv --out-fmt text'.format(yuv_path, adacof_dir)
+            # result = subprocess.check_output(cmd, shell=True)
+            # os.chdir(adacof_dir)
+            # os.system('rm tmp.yuv tmp.mp4')
 
-            oup_vmaf = float(str(result).split('Aggregate',1)[1].split('VMAF_score:')[1].split('\\')[0])
+            # oup_vmaf = float(str(result).split('Aggregate',1)[1].split('VMAF_score:')[1].split('\\')[0])
 
             print('successfully test {} images in {}'.format(len(oup_psnr), seq_name))
-            print('oup_PSNR:{0:.2f}, oup_SSIM:{1:.4f}, oup_VMAF:{1:.4f}'.format(sum(oup_psnr)/len(oup_psnr), sum(oup_ssim)/len(oup_ssim), oup_vmaf))
+            # print('oup_PSNR:{0:.2f}, oup_SSIM:{1:.4f}, oup_VMAF:{1:.4f}'.format(sum(oup_psnr)/len(oup_psnr), sum(oup_ssim)/len(oup_ssim), oup_vmaf))
             psnr_dict[seq_name] = sum(oup_psnr)/len(oup_psnr)
             ssim_dict[seq_name] = sum(oup_ssim)/len(oup_ssim)
-            vmaf_dict[seq_name] = oup_vmaf
+            # vmaf_dict[seq_name] = oup_vmaf
 
         with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
             pickle.dump(psnr_dict, f)
         with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
             pickle.dump(ssim_dict, f)
-        with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-            pickle.dump(vmaf_dict, f)
+        # with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+        #     pickle.dump(vmaf_dict, f)
     
     def _get_seq_list(self, db_dir, texture):
         # read annotations
