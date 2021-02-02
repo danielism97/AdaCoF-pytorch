@@ -155,6 +155,25 @@ class DBreader_BVItexture(Dataset):
                 rawFrame1 = TF.vflip(rawFrame1)
                 rawFrame2 = TF.vflip(rawFrame2)
 
+        # color jittering
+        if cointoss(0.5):
+            brightness_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_brightness(rawFrame0, brightness_factor)
+            rawFrame1 = TF.adjust_brightness(rawFrame1, brightness_factor)
+            rawFrame2 = TF.adjust_brightness(rawFrame2, brightness_factor)
+            contrast_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_contrast(rawFrame0, contrast_factor)
+            rawFrame1 = TF.adjust_contrast(rawFrame1, contrast_factor)
+            rawFrame2 = TF.adjust_contrast(rawFrame2, contrast_factor)
+            saturation_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_saturation(rawFrame0, saturation_factor)
+            rawFrame1 = TF.adjust_saturation(rawFrame1, saturation_factor)
+            rawFrame2 = TF.adjust_saturation(rawFrame2, saturation_factor)
+            hue_factor = random.uniform(-0.05, 0.05)
+            rawFrame0 = TF.adjust_hue(rawFrame0, hue_factor)
+            rawFrame1 = TF.adjust_hue(rawFrame1, hue_factor)
+            rawFrame2 = TF.adjust_hue(rawFrame2, hue_factor)
+
         frame0 = self.transform(rawFrame0)
         frame1 = self.transform(rawFrame1)
         frame2 = self.transform(rawFrame2)
@@ -233,6 +252,25 @@ class DBreader_SynTex(Dataset):
                 rawFrame0 = TF.vflip(rawFrame0)
                 rawFrame1 = TF.vflip(rawFrame1)
                 rawFrame2 = TF.vflip(rawFrame2)
+
+        # color jittering
+        if cointoss(0.5):
+            brightness_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_brightness(rawFrame0, brightness_factor)
+            rawFrame1 = TF.adjust_brightness(rawFrame1, brightness_factor)
+            rawFrame2 = TF.adjust_brightness(rawFrame2, brightness_factor)
+            contrast_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_contrast(rawFrame0, contrast_factor)
+            rawFrame1 = TF.adjust_contrast(rawFrame1, contrast_factor)
+            rawFrame2 = TF.adjust_contrast(rawFrame2, contrast_factor)
+            saturation_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_saturation(rawFrame0, saturation_factor)
+            rawFrame1 = TF.adjust_saturation(rawFrame1, saturation_factor)
+            rawFrame2 = TF.adjust_saturation(rawFrame2, saturation_factor)
+            hue_factor = random.uniform(-0.05, 0.05)
+            rawFrame0 = TF.adjust_hue(rawFrame0, hue_factor)
+            rawFrame1 = TF.adjust_hue(rawFrame1, hue_factor)
+            rawFrame2 = TF.adjust_hue(rawFrame2, hue_factor)
 
         frame0 = self.transform(rawFrame0)
         frame1 = self.transform(rawFrame1)
@@ -318,6 +356,25 @@ class DBreader_DynTex(Dataset):
                 rawFrame0 = TF.vflip(rawFrame0)
                 rawFrame1 = TF.vflip(rawFrame1)
                 rawFrame2 = TF.vflip(rawFrame2)
+
+        # color jittering
+        if cointoss(0.5):
+            brightness_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_brightness(rawFrame0, brightness_factor)
+            rawFrame1 = TF.adjust_brightness(rawFrame1, brightness_factor)
+            rawFrame2 = TF.adjust_brightness(rawFrame2, brightness_factor)
+            contrast_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_contrast(rawFrame0, contrast_factor)
+            rawFrame1 = TF.adjust_contrast(rawFrame1, contrast_factor)
+            rawFrame2 = TF.adjust_contrast(rawFrame2, contrast_factor)
+            saturation_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_saturation(rawFrame0, saturation_factor)
+            rawFrame1 = TF.adjust_saturation(rawFrame1, saturation_factor)
+            rawFrame2 = TF.adjust_saturation(rawFrame2, saturation_factor)
+            hue_factor = random.uniform(-0.05, 0.05)
+            rawFrame0 = TF.adjust_hue(rawFrame0, hue_factor)
+            rawFrame1 = TF.adjust_hue(rawFrame1, hue_factor)
+            rawFrame2 = TF.adjust_hue(rawFrame2, hue_factor)
 
         frame0 = self.transform(rawFrame0)
         frame1 = self.transform(rawFrame1)
