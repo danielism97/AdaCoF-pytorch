@@ -80,7 +80,7 @@ def main():
 
     while not my_trainer.terminate():
         my_trainer.train()
-        if my_trainer.current_epoch % 5 == 0:
+        if my_trainer.current_epoch % 50 == 0:
             my_trainer.test()
 
     my_trainer.close()
