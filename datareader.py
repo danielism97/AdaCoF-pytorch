@@ -747,20 +747,34 @@ class DBreader_DynTex(Dataset):
 
 
 class Sampler(Dataset):
-    def __init__(self, datasets):
+    def __init__(self, datasets, sample_mode, samples_per_epoch):
         self.datasets = datasets
         self.len_datasets = np.array([len(dataset) for dataset in self.datasets])
         self.p_datasets = self.len_datasets / np.sum(self.len_datasets)
 
+        self.sample_mode = sample_mode
+        self.samples_per_epoch = samples_per_epoch
+
     def __getitem__(self, index):
-        # first randomly sample a dataset
-        if index < self.len_datasets[0]:
-            return self.datasets[0].__getitem__(index)
-        elif index < np.sum(self.len_datasets[:2]):
-            return self.datasets[1].__getitem__(index-self.len_datasets[0])
-        else:
-            return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:2])))
+        if self.sample_mode == 'iterate':
+            # first randomly sample a dataset
+            if index < self.len_datasets[0]:
+                return self.datasets[0].__getitem__(index)
+            elif index < np.sum(self.len_datasets[:2]):
+                return self.datasets[1].__getitem__(index-self.len_datasets[0])
+            else:
+                return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:2])))
+        
+        elif self.sample_mode == 'random':
+            # first sample a dataset
+            dataset = random.choices(self.datasets, self.p_datasets)[0]
         
 
     def __len__(self):
-        return int(np.sum(self.len_datasets))
+        if self.sample_mode == 'iterate':
+            return int(np.sum(self.len_datasets))
+        elif self.sample_mode == 'random':
+            return self.samples_per_epoch
+        else:
+            print('sample mode incorrect')
+            return 0
