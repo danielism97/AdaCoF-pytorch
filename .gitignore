@@ -3,3 +3,4 @@ finetune_dyndis
 finetune_static
 finetune_mixed
 *__pycache__*
+output_adacof_train

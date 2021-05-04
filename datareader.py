@@ -1,7 +1,7 @@
 import numpy as np
 from os import listdir
 from PIL import Image
-from os.path import join, isdir, getsize
+from os.path import join, isdir, getsize, split
 from torch.utils.data import Dataset
 from torchvision import transforms
 import torchvision.transforms.functional as TF
@@ -49,8 +49,8 @@ def read_frame_yuv2rgb(stream, width, height, iFrame, bit_depth):
 
 
 class DBreader_Vimeo90k(Dataset):
-    def __init__(self, db_dir, random_crop=None, resize=None, augment_s=True, augment_t=True):
-        db_dir += '/sequences'
+    def __init__(self, db_dir, random_crop=None, resize=None, augment_s=True, augment_t=True, train=True):
+        seq_dir = join(db_dir, 'sequences')
         self.random_crop = random_crop
         self.augment_s = augment_s
         self.augment_t = augment_t
@@ -63,18 +63,22 @@ class DBreader_Vimeo90k(Dataset):
 
         self.transform = transforms.Compose(transform_list)
 
-        self.folder_list = [(db_dir + '/' + f) for f in listdir(db_dir) if isdir(join(db_dir, f))]
-        self.triplet_list = []
-        for folder in self.folder_list:
-            self.triplet_list += [(folder + '/' + f) for f in listdir(folder) if isdir(join(folder, f))]
+        if train:
+            seq_list_txt = join(db_dir, 'tri_trainlist.txt')
+        else:
+            seq_list_txt = join(db_dir, 'tri_testlist.txt')
 
-        self.triplet_list = np.array(self.triplet_list)
-        self.file_len = len(self.triplet_list)
+        with open(seq_list_txt) as f:
+            contents = f.readlines()
+            seq_path = [line.strip() for line in contents if line != '\n']
+
+        self.seq_path_list = [join(seq_dir, *line.split('/')) for line in seq_path]
+        self.file_len = len(self.seq_path_list)
 
     def __getitem__(self, index):
-        rawFrame0 = Image.open(self.triplet_list[index] + "/im1.png")
-        rawFrame1 = Image.open(self.triplet_list[index] + "/im2.png")
-        rawFrame2 = Image.open(self.triplet_list[index] + "/im3.png")
+        rawFrame0 = Image.open(join(self.seq_path_list[index],  "im1.png"))
+        rawFrame1 = Image.open(join(self.seq_path_list[index],  "im2.png"))
+        rawFrame2 = Image.open(join(self.seq_path_list[index],  "im3.png"))
 
         if self.random_crop is not None:
             i, j, h, w = transforms.RandomCrop.get_params(rawFrame1, output_size=self.random_crop)
@@ -91,6 +95,24 @@ class DBreader_Vimeo90k(Dataset):
                 rawFrame0 = TF.vflip(rawFrame0)
                 rawFrame1 = TF.vflip(rawFrame1)
                 rawFrame2 = TF.vflip(rawFrame2)
+        
+        if cointoss(0.5):
+            brightness_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_brightness(rawFrame0, brightness_factor)
+            rawFrame1 = TF.adjust_brightness(rawFrame1, brightness_factor)
+            rawFrame2 = TF.adjust_brightness(rawFrame2, brightness_factor)
+            contrast_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_contrast(rawFrame0, contrast_factor)
+            rawFrame1 = TF.adjust_contrast(rawFrame1, contrast_factor)
+            rawFrame2 = TF.adjust_contrast(rawFrame2, contrast_factor)
+            saturation_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_saturation(rawFrame0, saturation_factor)
+            rawFrame1 = TF.adjust_saturation(rawFrame1, saturation_factor)
+            rawFrame2 = TF.adjust_saturation(rawFrame2, saturation_factor)
+            hue_factor = random.uniform(-0.05, 0.05)
+            rawFrame0 = TF.adjust_hue(rawFrame0, hue_factor)
+            rawFrame1 = TF.adjust_hue(rawFrame1, hue_factor)
+            rawFrame2 = TF.adjust_hue(rawFrame2, hue_factor)
 
         frame0 = self.transform(rawFrame0)
         frame1 = self.transform(rawFrame1)
@@ -106,6 +128,119 @@ class DBreader_Vimeo90k(Dataset):
 
     def __len__(self):
         return self.file_len
+    
+
+class BVIDVC(Dataset):
+    def __init__(self, db_dir, res, crop_sz=(256,256), augment_s=True, augment_t=True):
+        assert res in ['2k', '1080', '960', '480']
+
+        db_dir = join(db_dir, 'Videos')
+        self.crop_sz = crop_sz
+        self.augment_s = augment_s
+        self.augment_t = augment_t
+
+        prefix = {'2k': 'A', '1080': 'B', '960': 'C', '480': 'D'}
+        self.seq_path_list = [join(db_dir, f) for f in listdir(db_dir) \
+                              if f.startswith(prefix[res]) and f.endswith('.yuv')]
+
+    def __getitem__(self, index):
+        # first randomly sample a triplet
+        stream = open(self.seq_path_list[index], 'r')
+        _, fname = split(self.seq_path_list[index])
+        width, height = [int(i) for i in fname.split('_')[1].split('x')]
+        file_size = getsize(self.seq_path_list[index])
+        num_frames = file_size // (width*height*3 // 2)
+        frame_idx = random.randint(1, num_frames-2)
+
+        rawFrame0 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx-1, 8).transpose((2, 0, 1))).contiguous() #CxHxW
+        rawFrame1 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx, 8).transpose((2, 0, 1))).contiguous()
+        rawFrame2 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx+1, 8).transpose((2, 0, 1))).contiguous()
+        stream.close()
+
+        if self.random_crop is not None:
+            i, j, h, w = transforms.RandomCrop.get_params(rawFrame1, output_size=self.random_crop)
+            rawFrame0 = TF.crop(rawFrame0, i, j, h, w)
+            rawFrame1 = TF.crop(rawFrame1, i, j, h, w)
+            rawFrame2 = TF.crop(rawFrame2, i, j, h, w)
+
+        if self.augment_s:
+            if cointoss(0.5):
+                rawFrame0 = TF.hflip(rawFrame0)
+                rawFrame1 = TF.hflip(rawFrame1)
+                rawFrame2 = TF.hflip(rawFrame2)
+            if cointoss(0.5):
+                rawFrame0 = TF.vflip(rawFrame0)
+                rawFrame1 = TF.vflip(rawFrame1)
+                rawFrame2 = TF.vflip(rawFrame2)
+        
+        if cointoss(0.5):
+            brightness_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_brightness(rawFrame0, brightness_factor)
+            rawFrame1 = TF.adjust_brightness(rawFrame1, brightness_factor)
+            rawFrame2 = TF.adjust_brightness(rawFrame2, brightness_factor)
+            contrast_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_contrast(rawFrame0, contrast_factor)
+            rawFrame1 = TF.adjust_contrast(rawFrame1, contrast_factor)
+            rawFrame2 = TF.adjust_contrast(rawFrame2, contrast_factor)
+            saturation_factor = random.uniform(0.95, 1.05)
+            rawFrame0 = TF.adjust_saturation(rawFrame0, saturation_factor)
+            rawFrame1 = TF.adjust_saturation(rawFrame1, saturation_factor)
+            rawFrame2 = TF.adjust_saturation(rawFrame2, saturation_factor)
+            hue_factor = random.uniform(-0.05, 0.05)
+            rawFrame0 = TF.adjust_hue(rawFrame0, hue_factor)
+            rawFrame1 = TF.adjust_hue(rawFrame1, hue_factor)
+            rawFrame2 = TF.adjust_hue(rawFrame2, hue_factor)
+
+        frame0 = self.transform(rawFrame0)
+        frame1 = self.transform(rawFrame1)
+        frame2 = self.transform(rawFrame2)
+
+        if self.augment_t:
+            if cointoss(0.5):
+                return frame2, frame1, frame0
+            else:
+                return frame0, frame1, frame2
+        else:
+            return frame0, frame1, frame2
+
+    def __len__(self):
+        return len(self.seq_path_list)
+
+
+class Sampler(Dataset):
+    def __init__(self, datasets, p_datasets=None, iter=False, samples_per_epoch=1000):
+        self.datasets = datasets
+        self.len_datasets = np.array([len(dataset) for dataset in self.datasets])
+        self.p_datasets = p_datasets
+        self.iter = iter
+
+        if p_datasets is None:
+            self.p_datasets = self.len_datasets / np.sum(self.len_datasets)
+
+        self.samples_per_epoch = samples_per_epoch
+
+        self.accum = [0,]
+        for i, length in enumerate(self.len_datasets):
+            self.accum.append(self.accum[-1] + self.len_datasets[i])
+
+    def __getitem__(self, index):
+        if self.iter:
+            # iterate through all datasets
+            for i in range(len(self.accum)):
+                if index < self.accum[i]:
+                    return self.datasets[i-1].__getitem__(index-self.accum[i-1])
+        else:
+            # first sample a dataset
+            dataset = random.choices(self.datasets, self.p_datasets)[0]
+            # sample a sequence from the dataset
+            return dataset.__getitem__(random.randint(0,len(dataset)-1))
+            
+
+    def __len__(self):
+        if self.iter:
+            return int(np.sum(self.len_datasets))
+        else:
+            return self.samples_per_epoch
 
 
 class DBreader_BVItexture(Dataset):
@@ -746,35 +881,35 @@ class DBreader_DynTex(Dataset):
             return
 
 
-class Sampler(Dataset):
-    def __init__(self, datasets, sample_mode, samples_per_epoch):
-        self.datasets = datasets
-        self.len_datasets = np.array([len(dataset) for dataset in self.datasets])
-        self.p_datasets = self.len_datasets / np.sum(self.len_datasets)
+# class Sampler(Dataset):
+#     def __init__(self, datasets, sample_mode, samples_per_epoch):
+#         self.datasets = datasets
+#         self.len_datasets = np.array([len(dataset) for dataset in self.datasets])
+#         self.p_datasets = self.len_datasets / np.sum(self.len_datasets)
 
-        self.sample_mode = sample_mode
-        self.samples_per_epoch = samples_per_epoch
+#         self.sample_mode = sample_mode
+#         self.samples_per_epoch = samples_per_epoch
 
-    def __getitem__(self, index):
-        if self.sample_mode == 'iterate':
-            # first randomly sample a dataset
-            if index < self.len_datasets[0]:
-                return self.datasets[0].__getitem__(index)
-            elif index < np.sum(self.len_datasets[:2]):
-                return self.datasets[1].__getitem__(index-self.len_datasets[0])
-            else:
-                return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:2])))
+#     def __getitem__(self, index):
+#         if self.sample_mode == 'iterate':
+#             # first randomly sample a dataset
+#             if index < self.len_datasets[0]:
+#                 return self.datasets[0].__getitem__(index)
+#             elif index < np.sum(self.len_datasets[:2]):
+#                 return self.datasets[1].__getitem__(index-self.len_datasets[0])
+#             else:
+#                 return self.datasets[2].__getitem__(index-int(np.sum(self.len_datasets[:2])))
         
-        elif self.sample_mode == 'random':
-            # first sample a dataset
-            dataset = random.choices(self.datasets, self.p_datasets)[0]
+#         elif self.sample_mode == 'random':
+#             # first sample a dataset
+#             dataset = random.choices(self.datasets, self.p_datasets)[0]
         
 
-    def __len__(self):
-        if self.sample_mode == 'iterate':
-            return int(np.sum(self.len_datasets))
-        elif self.sample_mode == 'random':
-            return self.samples_per_epoch
-        else:
-            print('sample mode incorrect')
-            return 0
+#     def __len__(self):
+#         if self.sample_mode == 'iterate':
+#             return int(np.sum(self.len_datasets))
+#         elif self.sample_mode == 'random':
+#             return self.samples_per_epoch
+#         else:
+#             print('sample mode incorrect')
+#             return 0
