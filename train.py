@@ -57,7 +57,7 @@ def main():
     bvidvc_960 = BVIDVC(join(args.data_dir, 'bvidvc'), res='960', crop_sz=(args.patch_size,args.patch_size))
     bvidvc_480 = BVIDVC(join(args.data_dir, 'bvidvc'), res='480', crop_sz=(args.patch_size,args.patch_size))
     datasets_train = [vimeo90k] + 8*[bvidvc_2k, bvidvc_1080, bvidvc_960, bvidvc_480] 
-    train_sampler = Sampler(datasets_train, iter=False, samples_per_epoch=8)
+    train_sampler = Sampler(datasets_train, iter=True)
 
     TestDB = Middlebury_other(args.test_input, args.gt)
     train_loader = DataLoader(dataset=train_sampler, batch_size=args.batch_size, shuffle=True, num_workers=0)
