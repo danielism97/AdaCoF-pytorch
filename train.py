@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 import argparse
 from torchvision import transforms
 import torch
-from TestModule import HomTex, Middlebury_other
+from TestModule import Middlebury_other
 import models
 from trainer import Trainer
 import losses
