@@ -2,6 +2,7 @@ import numpy as np
 from os import listdir
 from PIL import Image
 from os.path import join, isdir, getsize, split
+import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 import torchvision.transforms.functional as TF
