@@ -51,7 +51,7 @@ def main():
     args = parser.parse_args()
     torch.cuda.set_device(args.gpu_id)
 
-    vimeo90k = DBreader_Vimeo90k(join(args.data_dir, 'vimeo_triplet'), random_crop=(args.patch_size, args.patch_size))
+    vimeo90k_train = DBreader_Vimeo90k(join(args.data_dir, 'vimeo_triplet'), random_crop=(args.patch_size, args.patch_size))
     bvidvc_2k = BVIDVC(join(args.data_dir, 'bvidvc'), res='2k', crop_sz=(args.patch_size,args.patch_size))
     bvidvc_1080 = BVIDVC(join(args.data_dir, 'bvidvc'), res='1080', crop_sz=(args.patch_size,args.patch_size))
     bvidvc_960 = BVIDVC(join(args.data_dir, 'bvidvc'), res='960', crop_sz=(args.patch_size,args.patch_size))
