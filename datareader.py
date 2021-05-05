@@ -158,8 +158,8 @@ class BVIDVC(Dataset):
         rawFrame2 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx+1, 8).transpose((2, 0, 1))).contiguous()
         stream.close()
 
-        if self.random_crop is not None:
-            i, j, h, w = transforms.RandomCrop.get_params(rawFrame1, output_size=self.random_crop)
+        if self.crop_sz is not None:
+            i, j, h, w = transforms.RandomCrop.get_params(rawFrame1, output_size=self.crop_sz)
             rawFrame0 = TF.crop(rawFrame0, i, j, h, w)
             rawFrame1 = TF.crop(rawFrame1, i, j, h, w)
             rawFrame2 = TF.crop(rawFrame2, i, j, h, w)
