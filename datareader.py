@@ -14,37 +14,38 @@ def cointoss(p):
 
 def read_frame_yuv2rgb(stream, width, height, iFrame, bit_depth):
     if bit_depth == 8:
+        datatype = np.uint8
         stream.seek(iFrame*1.5*width*height)
-        Y = np.fromfile(stream, dtype=np.uint8, count=width*height).reshape((height, width))
+        Y = np.fromfile(stream, dtype=datatype, count=width*height).reshape((height, width))
         
         # read chroma samples and upsample since original is 4:2:0 sampling
-        U = np.fromfile(stream, dtype=np.uint8, count=(width//2)*(height//2)).\
+        U = np.fromfile(stream, dtype=datatype, count=(width//2)*(height//2)).\
                                 reshape((height//2, width//2))
-        V = np.fromfile(stream, dtype=np.uint8, count=(width//2)*(height//2)).\
+        V = np.fromfile(stream, dtype=datatype, count=(width//2)*(height//2)).\
                                 reshape((height//2, width//2))
 
     else:
+        datatype = np.uint16
         stream.seek(iFrame*3*width*height)
-        Y = np.fromfile(stream, dtype=np.uint16, count=width*height).reshape((height, width))
+        Y = np.fromfile(stream, dtype=datatype, count=width*height).reshape((height, width))
                 
-        U = np.fromfile(stream, dtype=np.uint16, count=(width//2)*(height//2)).\
+        U = np.fromfile(stream, dtype=datatype, count=(width//2)*(height//2)).\
                                 reshape((height//2, width//2))
-        V = np.fromfile(stream, dtype=np.uint16, count=(width//2)*(height//2)).\
+        V = np.fromfile(stream, dtype=datatype, count=(width//2)*(height//2)).\
                                 reshape((height//2, width//2))
 
     
-    yuv = np.empty((height*3//2, width), dtype=np.uint8)
+    yuv = np.empty((height*3//2, width), dtype=datatype)
     yuv[0:height,:] = Y
 
     yuv[height:height+height//4,:] = U.reshape(-1, width)
     yuv[height+height//4:,:] = V.reshape(-1, width)
 
+    if bit_depth == 10:
+        yuv = (yuv/1023*255).astype(np.uint8)
+
     #convert to rgb
-    bgr = cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_I420)
-
-    # bgr = cv2.resize(bgr, (int(width/4),int(height/4)), interpolation = cv2.INTER_AREA)
-
-    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB) # (270,480,3)
+    rgb = cv2.cvtColor(yuv, cv2.COLOR_YUV2RGB_I420)
 
     return rgb
 
@@ -140,6 +141,10 @@ class BVIDVC(Dataset):
         self.augment_s = augment_s
         self.augment_t = augment_t
 
+        transform_list = [transforms.ToTensor()]
+
+        self.transform = transforms.Compose(transform_list)
+
         prefix = {'2k': 'A', '1080': 'B', '960': 'C', '480': 'D'}
         self.seq_path_list = [join(db_dir, f) for f in listdir(db_dir) \
                               if f.startswith(prefix[res]) and f.endswith('.yuv')]
@@ -150,12 +155,12 @@ class BVIDVC(Dataset):
         _, fname = split(self.seq_path_list[index])
         width, height = [int(i) for i in fname.split('_')[1].split('x')]
         file_size = getsize(self.seq_path_list[index])
-        num_frames = file_size // (width*height*3 // 2)
+        num_frames = file_size // (width*height*3)
         frame_idx = random.randint(1, num_frames-2)
 
-        rawFrame0 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx-1, 8).transpose((2, 0, 1))).contiguous() #CxHxW
-        rawFrame1 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx, 8).transpose((2, 0, 1))).contiguous()
-        rawFrame2 = torch.from_numpy(read_frame_yuv2rgb(stream, width, height, frame_idx+1, 8).transpose((2, 0, 1))).contiguous()
+        rawFrame0 = Image.fromarray(read_frame_yuv2rgb(stream, width, height, frame_idx-1, 10))
+        rawFrame1 = Image.fromarray(read_frame_yuv2rgb(stream, width, height, frame_idx, 10))
+        rawFrame2 = Image.fromarray(read_frame_yuv2rgb(stream, width, height, frame_idx+1, 10))
         stream.close()
 
         if self.crop_sz is not None:
