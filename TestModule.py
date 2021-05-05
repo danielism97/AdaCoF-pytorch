@@ -6,7 +6,7 @@ from torchvision.utils import save_image as imwrite
 import os
 from utility import to_variable
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import pickle
 import subprocess
 import cv2
@@ -160,124 +160,124 @@ class ucf:
             logfile.write(msg)
 
 
-class HomTex:
-    def __init__(self, db_dir, texture):
-        self.width = 256
-        self.height = 256
-        self.yuv_list = self._get_seq_list(db_dir, texture)
-        self.transform = transforms.Compose([transforms.ToTensor()])
-        self.bvi_texture_seqs = ['PaintingTilting', 'PaperStatic', 'BallUnderWater', 'BricksBushesStatic', 
-                                 'PlasmaFree', 'CalmingWater', 'LampLeaves', 'SmokeClear']
+# class HomTex:
+#     def __init__(self, db_dir, texture):
+#         self.width = 256
+#         self.height = 256
+#         self.yuv_list = self._get_seq_list(db_dir, texture)
+#         self.transform = transforms.Compose([transforms.ToTensor()])
+#         self.bvi_texture_seqs = ['PaintingTilting', 'PaperStatic', 'BallUnderWater', 'BricksBushesStatic', 
+#                                  'PlasmaFree', 'CalmingWater', 'LampLeaves', 'SmokeClear']
 
-    def Test(self, model, epoch, output_dir):
-        vmaf_dir = '/mnt/storage/home/mt20523/vmaf'
-        adacof_dir = '/mnt/storage/home/mt20523/AdaCoF-pytorch'
-        model.eval()
+#     def Test(self, model, epoch, output_dir):
+#         vmaf_dir = '/mnt/storage/home/mt20523/vmaf'
+#         adacof_dir = '/mnt/storage/home/mt20523/AdaCoF-pytorch'
+#         model.eval()
 
-        totensor = transforms.ToTensor()
+#         totensor = transforms.ToTensor()
 
-        vmaf_dict = dict()
-        psnr_dict = dict()
-        ssim_dict = dict()
+#         vmaf_dict = dict()
+#         psnr_dict = dict()
+#         ssim_dict = dict()
 
-        for i, yuv_path in enumerate(self.yuv_list, 1):
-            print('processing the {}/120 sequence'.format(i))
-            oup_psnr, oup_ssim = [], []
+#         for i, yuv_path in enumerate(self.yuv_list, 1):
+#             print('processing the {}/120 sequence'.format(i))
+#             oup_psnr, oup_ssim = [], []
 
-            # get seq name
-            seq_name = yuv_path.split('/')[-1].split('_')[:-1]
-            seq_name = seq_name[0] if len(seq_name) == 1 else seq_name[0]+'_'+seq_name[1]
-            fps = 25
-            for s in self.bvi_texture_seqs:
-                if s in seq_name:
-                    fps = 60
+#             # get seq name
+#             seq_name = yuv_path.split('/')[-1].split('_')[:-1]
+#             seq_name = seq_name[0] if len(seq_name) == 1 else seq_name[0]+'_'+seq_name[1]
+#             fps = 25
+#             for s in self.bvi_texture_seqs:
+#                 if s in seq_name:
+#                     fps = 60
 
-            # load sequence
-            stream = open(yuv_path, 'r')
-            file_size = os.path.getsize(yuv_path)
-            n_frames = file_size // (self.width*self.height*3 // 2)
+#             # load sequence
+#             stream = open(yuv_path, 'r')
+#             file_size = os.path.getsize(yuv_path)
+#             n_frames = file_size // (self.width*self.height*3 // 2)
 
-            # oup_frames = []
-            # add the first frame
-            # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, 0, 8), cv2.COLOR_RGB2BGR))
-            for t in range(0, n_frames-2, 2):
-                with torch.no_grad():
-                # read 3 frames (rgb)
-                    img1 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t, 8))[None,...].cuda() # 1x3xHxW
-                    img2 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t+1, 8))[None,...].cuda()
-                    img3 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8))[None,...].cuda()
+#             # oup_frames = []
+#             # add the first frame
+#             # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, 0, 8), cv2.COLOR_RGB2BGR))
+#             for t in range(0, n_frames-2, 2):
+#                 with torch.no_grad():
+#                 # read 3 frames (rgb)
+#                     img1 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t, 8))[None,...].cuda() # 1x3xHxW
+#                     img2 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t+1, 8))[None,...].cuda()
+#                     img3 = totensor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8))[None,...].cuda()
 
-                # predict
-                    oup = model(img1, img3)
-                # Calculate average PSNR
-                oup_psnr.extend(to_psnr(oup, img2))
-                # Calculate average SSIM
-                oup_ssim.extend(to_ssim(oup, img2, size_average=False).cpu().numpy())
+#                 # predict
+#                     oup = model(img1, img3)
+#                 # Calculate average PSNR
+#                 oup_psnr.extend(to_psnr(oup, img2))
+#                 # Calculate average SSIM
+#                 oup_ssim.extend(to_ssim(oup, img2, size_average=False).cpu().numpy())
 
-                # oup_rgb = np.moveaxis(oup[0].cpu().clamp(0.0, 1.0).numpy()*255.0, 0, -1).astype(np.uint8)
+#                 # oup_rgb = np.moveaxis(oup[0].cpu().clamp(0.0, 1.0).numpy()*255.0, 0, -1).astype(np.uint8)
 
-                # oup_frames.append(cv2.cvtColor(oup_rgb, cv2.COLOR_RGB2BGR)) #256x256x3
-                # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8), cv2.COLOR_RGB2BGR))
+#                 # oup_frames.append(cv2.cvtColor(oup_rgb, cv2.COLOR_RGB2BGR)) #256x256x3
+#                 # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, t+2, 8), cv2.COLOR_RGB2BGR))
 
-                torch.cuda.empty_cache()
-            # add the last frame (index: 249)
-            # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, n_frames-1, 8), cv2.COLOR_RGB2BGR))
-            stream.close()
+#                 torch.cuda.empty_cache()
+#             # add the last frame (index: 249)
+#             # oup_frames.append(cv2.cvtColor(read_frame_yuv2rgb(stream, self.width, self.height, n_frames-1, 8), cv2.COLOR_RGB2BGR))
+#             stream.close()
 
-            # # build interpolated video (mp4)
-            # out_mp4 = cv2.VideoWriter('tmp.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (256,256))
-            # for i in range(len(oup_frames)):
-            #     out_mp4.write(oup_frames[i])
-            # out_mp4.release()
+#             # # build interpolated video (mp4)
+#             # out_mp4 = cv2.VideoWriter('tmp.mp4', cv2.VideoWriter_fourcc(*'MP4V'), fps, (256,256))
+#             # for i in range(len(oup_frames)):
+#             #     out_mp4.write(oup_frames[i])
+#             # out_mp4.release()
 
-            # # convert mp4 to yuv
-            # os.system('ffmpeg -i tmp.mp4 tmp.yuv')
+#             # # convert mp4 to yuv
+#             # os.system('ffmpeg -i tmp.mp4 tmp.yuv')
 
-            # # compute vmaf
-            # os.chdir(vmaf_dir)
-            # cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} {}/tmp.yuv --out-fmt text'.format(yuv_path, adacof_dir)
-            # result = subprocess.check_output(cmd, shell=True)
-            # os.chdir(adacof_dir)
-            # os.system('rm tmp.yuv tmp.mp4')
+#             # # compute vmaf
+#             # os.chdir(vmaf_dir)
+#             # cmd = 'PYTHONPATH=python /content/vmaf/python/vmaf/script/run_vmaf.py yuv420p 256 256 {} {}/tmp.yuv --out-fmt text'.format(yuv_path, adacof_dir)
+#             # result = subprocess.check_output(cmd, shell=True)
+#             # os.chdir(adacof_dir)
+#             # os.system('rm tmp.yuv tmp.mp4')
 
-            # oup_vmaf = float(str(result).split('Aggregate',1)[1].split('VMAF_score:')[1].split('\\')[0])
+#             # oup_vmaf = float(str(result).split('Aggregate',1)[1].split('VMAF_score:')[1].split('\\')[0])
 
-            print('successfully test {} images in {}'.format(len(oup_psnr), seq_name))
-            # print('oup_PSNR:{0:.2f}, oup_SSIM:{1:.4f}, oup_VMAF:{1:.4f}'.format(sum(oup_psnr)/len(oup_psnr), sum(oup_ssim)/len(oup_ssim), oup_vmaf))
-            psnr_dict[seq_name] = sum(oup_psnr)/len(oup_psnr)
-            ssim_dict[seq_name] = sum(oup_ssim)/len(oup_ssim)
-            # vmaf_dict[seq_name] = oup_vmaf
+#             print('successfully test {} images in {}'.format(len(oup_psnr), seq_name))
+#             # print('oup_PSNR:{0:.2f}, oup_SSIM:{1:.4f}, oup_VMAF:{1:.4f}'.format(sum(oup_psnr)/len(oup_psnr), sum(oup_ssim)/len(oup_ssim), oup_vmaf))
+#             psnr_dict[seq_name] = sum(oup_psnr)/len(oup_psnr)
+#             ssim_dict[seq_name] = sum(oup_ssim)/len(oup_ssim)
+#             # vmaf_dict[seq_name] = oup_vmaf
 
-        with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-            pickle.dump(psnr_dict, f)
-        with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-            pickle.dump(ssim_dict, f)
-        # with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
-        #     pickle.dump(vmaf_dict, f)
+#         with open(output_dir+'/adacof_psnr_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+#             pickle.dump(psnr_dict, f)
+#         with open(output_dir+'/adacof_ssim_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+#             pickle.dump(ssim_dict, f)
+#         # with open(output_dir+'/adacof_vmaf_epoch{}.pkl'.format(str(epoch).zfill(2)), 'wb+') as f:
+#         #     pickle.dump(vmaf_dict, f)
     
-    def _get_seq_list(self, db_dir, texture):
-        # read annotations
-        csv_path = join(db_dir, 'Annotations.csv')
-        df = pd.read_csv(csv_path, sep=';', nrows=120)
-        seq_labels = dict()
-        for index, row in df.iterrows():
-            seq_name = row['Sequence name'].split('_')[:-1]
-            seq_name = seq_name[0] if len(seq_name) == 1 else seq_name[0]+'_'+seq_name[1]
-            if not seq_name.endswith('downsampled'):
-                seq_name = seq_name.replace("_", "-", 1)
-            seq_labels[seq_name] = row['Dynamics (static or dynamic)'] + '-' + row['Structure (continuous, discrete)']
+#     def _get_seq_list(self, db_dir, texture):
+#         # read annotations
+#         csv_path = join(db_dir, 'Annotations.csv')
+#         df = pd.read_csv(csv_path, sep=';', nrows=120)
+#         seq_labels = dict()
+#         for index, row in df.iterrows():
+#             seq_name = row['Sequence name'].split('_')[:-1]
+#             seq_name = seq_name[0] if len(seq_name) == 1 else seq_name[0]+'_'+seq_name[1]
+#             if not seq_name.endswith('downsampled'):
+#                 seq_name = seq_name.replace("_", "-", 1)
+#             seq_labels[seq_name] = row['Dynamics (static or dynamic)'] + '-' + row['Structure (continuous, discrete)']
         
-        static_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f].startswith('static')]
-        dyndis_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f]=='dynamic-discrete']
-        dyncon_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f]=='dynamic-continuous']
-        if texture == 'mixed':
-            return static_list + dyncon_list + dyndis_list
-        elif texture == 'dyndis':
-            return dyndis_list
-        elif texture == 'dyncon':
-            return dyncon_list
-        elif texture == 'static':
-            return static_list
-        else:
-            print('wrong texture name')
-            return
+#         static_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f].startswith('static')]
+#         dyndis_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f]=='dynamic-discrete']
+#         dyncon_list = [join(db_dir, f+'_256x256.yuv') for f in seq_labels.keys() if seq_labels[f]=='dynamic-continuous']
+#         if texture == 'mixed':
+#             return static_list + dyncon_list + dyndis_list
+#         elif texture == 'dyndis':
+#             return dyndis_list
+#         elif texture == 'dyncon':
+#             return dyncon_list
+#         elif texture == 'static':
+#             return static_list
+#         else:
+#             print('wrong texture name')
+#             return
